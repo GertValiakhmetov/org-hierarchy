@@ -1,7 +1,8 @@
+import type { SortColumn } from '@shared/types';
 import type { OrgAggregate } from '@/entities/org/aggregate';
 import type { OrgNode } from '@/entities/org/types';
 
-export type ColumnId = 'name' | 'level' | 'headcount' | 'budget' | 'performance';
+export type ColumnId = SortColumn;
 
 export type SortDirection = 'asc' | 'desc';
 

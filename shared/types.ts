@@ -52,3 +52,51 @@ export interface OrgNodePatch {
 export type LiveMessage =
   | { type: 'hello'; version: number }
   | { type: 'node-updated'; version: number; patch: OrgNodePatch };
+
+export interface NumericRange {
+  min?: number;
+  max?: number;
+}
+
+/**
+ * Result of interpreting a search query. Every field is optional and they are
+ * combined with AND; an empty filter matches everything, which is what plain
+ * text search degrades to.
+ *
+ * Numeric ranges are compared against a node's rolled-up totals, not its own
+ * values — those are the numbers the table shows.
+ */
+export interface OrgFilter {
+  name?: string;
+  /** Explicit selection, used when a query names nodes no substring would match. */
+  ids?: string[];
+  levels?: OrgLevel[];
+  headcount?: NumericRange;
+  budget?: NumericRange;
+  performance?: NumericRange;
+}
+
+export type SortColumn = 'name' | 'level' | 'headcount' | 'budget' | 'performance';
+
+export interface SortSpec {
+  column: SortColumn;
+  direction: 'asc' | 'desc';
+}
+
+export type SearchSource = 'ai' | 'text';
+
+/** Why the plain-text path was taken; shown to the user so the UI never claims AI ran. */
+export type SearchFallbackReason = 'not-configured' | 'failed' | 'invalid';
+
+export interface SearchRequest {
+  query: string;
+}
+
+export interface SearchResponse {
+  source: SearchSource;
+  filter: OrgFilter;
+  sort?: SortSpec;
+  reason?: SearchFallbackReason;
+}
+
+export const MAX_SEARCH_QUERY_LENGTH = 300;

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { EMPLOYEE_FORMS, ORG_UNIT_FORMS } from '@/entities/org/labels';
 import { DebugPanel, isDebugPanelEnabled } from '@/features/debug-panel/debug-panel';
 import { useOrgStructure } from '@/features/org-structure';
-import { OrgTable, TableToolbar, useTableRows } from '@/features/org-table';
+import { useOrgSearch } from '@/features/ai-search';
+import { FilterChips, OrgTable, TableToolbar, useTableRows } from '@/features/org-table';
 import { OrgTree, useTreeNavigation } from '@/features/org-tree';
 import { formatQuantity } from '@/shared/lib/format';
 import { CardScroll, CardToolbar, CardToolbarButton } from '@/shared/ui/card';
@@ -33,6 +34,13 @@ export function App() {
   const navigation = useTreeNavigation(org.tree);
   const table = useTableRows(org.tree, org.aggregates);
   const [view, setView] = useState<View>('tree');
+
+  const search = useOrgSearch({
+    onResult: (filter, sort) => {
+      table.setFilter(filter);
+      if (sort) table.setSort(sort);
+    },
+  });
 
   if (org.status !== 'ready') {
     return <PlaceholderScreen structure={org} />;
@@ -90,10 +98,19 @@ export function App() {
 
         <Pane $hiddenBelowSplit={view !== 'table'}>
           <TableToolbar
-            filter={table.filter}
-            onFilterChange={table.setFilter}
+            query={table.query}
+            onQueryChange={table.setQuery}
+            onSubmit={() => search.submit(table.query)}
+            isSearching={search.isRunning}
+            source={search.source}
+            reason={search.reason}
             shownCount={table.rows.length}
             totalCount={table.totalCount}
+          />
+          <FilterChips
+            filter={table.filter}
+            onChange={table.setFilter}
+            onReset={table.clearFilter}
           />
           <OrgTable
             rows={table.rows}

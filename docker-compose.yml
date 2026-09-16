@@ -1,0 +1,25 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      PORT: 4000
+      API_LATENCY_MS: ${API_LATENCY_MS:-250}
+      LIVE_TICK_MS: ${LIVE_TICK_MS:-3000}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    expose:
+      - '4000'
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        VITE_DEBUG_PANEL: ${VITE_DEBUG_PANEL:-true}
+    ports:
+      - '${CLIENT_PORT:-8080}:80'
+    depends_on:
+      - server
+    restart: unless-stopped

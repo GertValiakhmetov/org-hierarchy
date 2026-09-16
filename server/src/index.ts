@@ -3,6 +3,7 @@ import express from 'express';
 import { DEBUG_MODES, type DebugMode } from '../../shared/types.ts';
 import { generateOrgTree } from './data/generate.ts';
 import { attachLiveChannel } from './live.ts';
+import { createSearchHandler } from './search.ts';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -50,6 +51,8 @@ app.get('/api/org-tree', async (_req, res) => {
       res.json(nodes);
   }
 });
+
+app.post('/api/search', createSearchHandler(nodes));
 
 app.get('/api/debug/mode', (_req, res) => {
   res.json({ mode: debugMode });
