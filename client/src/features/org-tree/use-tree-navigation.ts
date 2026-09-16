@@ -25,10 +25,7 @@ export function useTreeNavigation(tree: OrgTree | undefined): TreeNavigation {
   const [override, setOverride] = useState<ReadonlySet<string> | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const defaults = useMemo(
-    () => new Set<string>(tree?.roots.map((root) => root.id) ?? []),
-    [tree],
-  );
+  const defaults = useMemo(() => new Set<string>(tree?.roots.map((root) => root.id) ?? []), [tree]);
 
   const expanded = override ?? defaults;
 

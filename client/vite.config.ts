@@ -7,7 +7,9 @@ const SERVER_URL = process.env.VITE_API_TARGET ?? 'http://localhost:4000';
 export default defineConfig({
   plugins: [
     react({
-      babel: { plugins: [['babel-plugin-styled-components', { displayName: true, fileName: false }]] },
+      babel: {
+        plugins: [['babel-plugin-styled-components', { displayName: true, fileName: false }]],
+      },
     }),
   ],
   resolve: {

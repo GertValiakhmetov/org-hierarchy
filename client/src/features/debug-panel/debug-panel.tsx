@@ -1,7 +1,7 @@
+import type { DebugMode } from '@shared/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import styled from 'styled-components';
-import type { DebugMode } from '@shared/types';
 import { debugModeQuery, disconnectLive, setDebugMode } from '@/shared/api/debug';
 import { orgTreeKeys } from '@/shared/api/org-tree';
 

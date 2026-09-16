@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { OrgFilter } from '@shared/types';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { OrgAggregates } from '@/entities/org/aggregate';
 import type { OrgTree } from '@/entities/org/types';
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
 import type { ColumnId, Row } from './columns';
-import { EMPTY_FILTER, nextSort, selectRows, type Sort } from './select-rows';
+import { EMPTY_FILTER, nextSort, type Sort, selectRows } from './select-rows';
 
 const FILTER_DEBOUNCE_MS = 250;
 

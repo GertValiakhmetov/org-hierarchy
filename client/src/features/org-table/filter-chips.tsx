@@ -1,6 +1,6 @@
-import styled from 'styled-components';
 import type { OrgFilter } from '@shared/types';
-import { describeFilter, removeField, type FilterField } from './describe-filter';
+import styled from 'styled-components';
+import { describeFilter, type FilterField, removeField } from './describe-filter';
 
 const Bar = styled.div`
   display: flex;
@@ -82,7 +82,11 @@ export function FilterChips({ filter, onChange, onReset }: FilterChipsProps) {
       {chips.map((chip) => (
         <Chip key={chip.field}>
           {chip.label}
-          <Remove type="button" aria-label={`Убрать условие: ${chip.label}`} onClick={() => drop(chip.field)}>
+          <Remove
+            type="button"
+            aria-label={`Убрать условие: ${chip.label}`}
+            onClick={() => drop(chip.field)}
+          >
             ×
           </Remove>
         </Chip>

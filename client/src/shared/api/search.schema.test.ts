@@ -68,9 +68,9 @@ describe('parseSearchResponse', () => {
   });
 
   it('rejects a sort on an unknown column', () => {
-    expect(issues({ source: 'ai', filter: {}, sort: { column: 'salary', direction: 'asc' } })).toEqual(
-      ['sort.column'],
-    );
+    expect(
+      issues({ source: 'ai', filter: {}, sort: { column: 'salary', direction: 'asc' } }),
+    ).toEqual(['sort.column']);
   });
 
   it('accepts a valid sort', () => {

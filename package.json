@@ -16,9 +16,12 @@
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=client",
     "test": "npm run test --workspace=client && npm run test --workspace=server",
-    "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server"
+    "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server",
+    "lint": "biome check",
+    "lint:fix": "biome check --write"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
     "concurrently": "^10.0.5"
   }
 }

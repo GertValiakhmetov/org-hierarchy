@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { performanceBand, PERFORMANCE_LABEL } from '@/entities/org/performance';
+import { PERFORMANCE_LABEL, performanceBand } from '@/entities/org/performance';
 import { formatPerformance } from '@/shared/lib/format';
 
 const Wrapper = styled.span`
@@ -28,7 +28,10 @@ export function PerformanceDot({ value, withoutValue, className }: PerformanceDo
   const band = performanceBand(value);
 
   return (
-    <Wrapper className={className} title={`${formatPerformance(value)} — ${PERFORMANCE_LABEL[band]}`}>
+    <Wrapper
+      className={className}
+      title={`${formatPerformance(value)} — ${PERFORMANCE_LABEL[band]}`}
+    >
       <Dot $band={band} aria-hidden />
       {withoutValue ? (
         <span className="visually-hidden">{PERFORMANCE_LABEL[band]}</span>

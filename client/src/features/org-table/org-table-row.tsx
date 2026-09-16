@@ -1,6 +1,6 @@
+import type { PatchField } from '@shared/types';
 import { memo } from 'react';
 import styled from 'styled-components';
-import type { PatchField } from '@shared/types';
 import { PERSON_FORMS } from '@/entities/org/labels';
 import { LEVEL_LABEL } from '@/entities/org/types';
 import { formatQuantity, formatRubles } from '@/shared/lib/format';

@@ -1,15 +1,11 @@
+import type { OrgFilter } from '@shared/types';
 import { describe, expect, it } from 'vitest';
 import type { OrgAggregate } from '@/entities/org/aggregate';
 import type { OrgNode } from '@/entities/org/types';
 import type { Row } from './columns';
-import type { OrgFilter } from '@shared/types';
-import { EMPTY_FILTER, isEmptyFilter, nextSort, selectRows, type Sort } from './select-rows';
+import { EMPTY_FILTER, isEmptyFilter, nextSort, type Sort, selectRows } from './select-rows';
 
-function row(
-  name: string,
-  level: OrgNode['level'],
-  aggregate: Partial<OrgAggregate> = {},
-): Row {
+function row(name: string, level: OrgNode['level'], aggregate: Partial<OrgAggregate> = {}): Row {
   return {
     node: { name, level, id: name } as OrgNode,
     aggregate: {
@@ -47,11 +43,9 @@ describe('selectRows', () => {
   it('sorts names with a Russian collator, not by code point', () => {
     const cyrillic = [row('ёлка', 'team'), row('его', 'team'), row('яблоко', 'team')];
 
-    expect(names(selectRows(cyrillic, EMPTY_FILTER, { column: 'name', direction: 'asc' }))).toEqual([
-      'его',
-      'ёлка',
-      'яблоко',
-    ]);
+    expect(names(selectRows(cyrillic, EMPTY_FILTER, { column: 'name', direction: 'asc' }))).toEqual(
+      ['его', 'ёлка', 'яблоко'],
+    );
   });
 
   it('sorts levels by hierarchy rather than alphabetically', () => {
@@ -157,10 +151,14 @@ describe('selectRows: структурный фильтр', () => {
   });
 
   it('still sorts what the filter left', () => {
-    const result = selectRows(ROWS, { levels: ['division', 'department'] }, {
-      column: 'headcount',
-      direction: 'asc',
-    });
+    const result = selectRows(
+      ROWS,
+      { levels: ['division', 'department'] },
+      {
+        column: 'headcount',
+        direction: 'asc',
+      },
+    );
 
     expect(result.map((r) => r.node.name)).toEqual(['Маркетинг', 'Инженерия']);
   });

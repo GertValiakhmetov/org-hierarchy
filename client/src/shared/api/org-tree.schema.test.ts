@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import type { OrgNodeDto } from '@shared/types';
+import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/shared/transport/errors';
 import { parseOrgTreeResponse } from './org-tree.schema';
 

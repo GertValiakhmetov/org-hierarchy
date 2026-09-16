@@ -64,8 +64,8 @@ const SKELETON_SHAPE: { indent: number; width: number }[] = [
 export function LoadingState() {
   return (
     <SkeletonList role="status" aria-label="Загрузка орг-структуры">
-      {SKELETON_SHAPE.map((row, index) => (
-        <SkeletonRow key={index} $indent={row.indent} $width={row.width} />
+      {SKELETON_SHAPE.map((row) => (
+        <SkeletonRow key={`${row.indent}-${row.width}`} $indent={row.indent} $width={row.width} />
       ))}
     </SkeletonList>
   );
@@ -75,7 +75,9 @@ export function EmptyState() {
   return (
     <Centered>
       <Title>Данных нет</Title>
-      <Hint>Сервер вернул пустую структуру. Как только появятся подразделения, они отобразятся здесь.</Hint>
+      <Hint>
+        Сервер вернул пустую структуру. Как только появятся подразделения, они отобразятся здесь.
+      </Hint>
     </Centered>
   );
 }
@@ -115,7 +117,10 @@ function describe(error: unknown): { title: string; hint: string } {
   if (error instanceof ApiError) {
     switch (error.kind) {
       case 'network':
-        return { title: 'Сервер недоступен', hint: 'Проверьте, что API запущен, и повторите запрос.' };
+        return {
+          title: 'Сервер недоступен',
+          hint: 'Проверьте, что API запущен, и повторите запрос.',
+        };
       case 'http':
         return {
           title: `Ошибка ${error.status ?? ''}`.trim(),
@@ -158,7 +163,9 @@ export function ErrorState({ error, onRetry, isRetrying }: ErrorStateProps) {
               {issue.path}: {issue.message}
             </li>
           ))}
-          {issues.length > MAX_VISIBLE_ISSUES && <li>…и ещё {issues.length - MAX_VISIBLE_ISSUES}</li>}
+          {issues.length > MAX_VISIBLE_ISSUES && (
+            <li>…и ещё {issues.length - MAX_VISIBLE_ISSUES}</li>
+          )}
         </IssueList>
       )}
 

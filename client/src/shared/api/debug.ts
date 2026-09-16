@@ -1,5 +1,5 @@
-import { queryOptions } from '@tanstack/react-query';
 import { DEBUG_MODES, type DebugMode, type DebugModeResponse } from '@shared/types';
+import { queryOptions } from '@tanstack/react-query';
 import { ApiError } from '@/shared/transport/errors';
 import { fetchJson } from '@/shared/transport/http';
 

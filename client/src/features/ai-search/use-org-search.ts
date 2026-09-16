@@ -1,6 +1,6 @@
+import type { OrgFilter, SearchFallbackReason, SearchSource, SortSpec } from '@shared/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
-import type { OrgFilter, SearchFallbackReason, SearchSource, SortSpec } from '@shared/types';
 import { searchOrg } from '@/shared/api/search';
 
 const SEARCH_CACHE_MS = 5 * 60_000;

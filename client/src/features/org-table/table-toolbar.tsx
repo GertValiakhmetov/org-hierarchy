@@ -1,5 +1,5 @@
-import styled from 'styled-components';
 import type { SearchFallbackReason, SearchSource } from '@shared/types';
+import styled from 'styled-components';
 import { ORG_UNIT_FORMS } from '@/entities/org/labels';
 import { formatCount, formatQuantity } from '@/shared/lib/format';
 

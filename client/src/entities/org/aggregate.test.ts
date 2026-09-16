@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import type { OrgNodeDto } from '@shared/types';
+import { describe, expect, it } from 'vitest';
 import { aggregateTree } from './aggregate';
 import { buildTree } from './build-tree';
 
@@ -23,7 +23,9 @@ const aggregatesOf = (nodes: OrgNodeDto[]) => aggregateTree(buildTree(nodes));
 
 describe('aggregateTree', () => {
   it('returns a leaf its own metrics unchanged', () => {
-    const result = aggregatesOf([node('team', null, { headcount: 10, budget: 500, performance: 80 })]);
+    const result = aggregatesOf([
+      node('team', null, { headcount: 10, budget: 500, performance: 80 }),
+    ]);
 
     expect(result.get('team')).toEqual({ headcount: 10, budget: 500, performance: 80 });
   });
@@ -83,11 +85,7 @@ describe('aggregateTree', () => {
   });
 
   it('covers every node of the tree', () => {
-    const nodes = [
-      node('div', null),
-      node('dep', 'div'),
-      node('team', 'dep'),
-    ];
+    const nodes = [node('div', null), node('dep', 'div'), node('team', 'dep')];
 
     expect(aggregatesOf(nodes).size).toBe(3);
   });

@@ -1,11 +1,11 @@
+import type { PatchField } from '@shared/types';
 import { memo, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import type { PatchField } from '@shared/types';
 import type { OrgAggregates } from '@/entities/org/aggregate';
-import type { Highlight } from '@/features/org-structure';
-import type { OrgNode } from '@/entities/org/types';
 import { PERSON_FORMS } from '@/entities/org/labels';
+import type { OrgNode } from '@/entities/org/types';
 import { LEVEL_LABEL } from '@/entities/org/types';
+import type { Highlight } from '@/features/org-structure';
 import { formatCount, formatQuantity } from '@/shared/lib/format';
 import { useFlash } from '@/shared/lib/use-flash';
 import { FLASH_DURATION_MS, flash } from '@/shared/ui/flash';

@@ -89,7 +89,9 @@ app.post('/api/debug/disconnect', (_req, res) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`[server] http://localhost:${PORT} — ${nodes.length} узлов, задержка ${LATENCY_MS} мс`);
+  console.log(
+    `[server] http://localhost:${PORT} — ${nodes.length} узлов, задержка ${LATENCY_MS} мс`,
+  );
 });
 
 const live = attachLiveChannel(server, nodes);

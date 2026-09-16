@@ -129,7 +129,10 @@ export function parseSearchResponse(payload: unknown): SearchResponse {
   }
 
   if (payload.source !== 'ai' && payload.source !== 'text') {
-    issues.push({ path: 'source', message: `ожидалось ai или text, получено «${String(payload.source)}»` });
+    issues.push({
+      path: 'source',
+      message: `ожидалось ai или text, получено «${String(payload.source)}»`,
+    });
   }
 
   const filter = readFilter(payload.filter, issues);

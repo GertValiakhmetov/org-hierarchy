@@ -1,5 +1,5 @@
-import { queryOptions, type QueryClient } from '@tanstack/react-query';
 import type { OrgNodeDto } from '@shared/types';
+import { type QueryClient, queryOptions } from '@tanstack/react-query';
 import { fetchJson } from '@/shared/transport/http';
 import { parseOrgTreeResponse } from './org-tree.schema';
 

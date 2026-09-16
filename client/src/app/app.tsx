@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { EMPLOYEE_FORMS, ORG_UNIT_FORMS } from '@/entities/org/labels';
+import { useOrgSearch } from '@/features/ai-search';
 import { DebugPanel, isDebugPanelEnabled } from '@/features/debug-panel/debug-panel';
 import { useOrgStructure } from '@/features/org-structure';
-import { useOrgSearch } from '@/features/ai-search';
 import { FilterChips, OrgTable, TableToolbar, useTableRows } from '@/features/org-table';
 import { OrgTree, useTreeNavigation } from '@/features/org-tree';
 import { formatQuantity } from '@/shared/lib/format';
@@ -10,16 +10,7 @@ import { CardScroll, CardToolbar, CardToolbarButton } from '@/shared/ui/card';
 import { ConnectionDot } from '@/shared/ui/connection-dot';
 import { SegmentedControl, type SegmentedOption } from '@/shared/ui/segmented-control';
 import { StaleDataNotice } from '@/shared/ui/state-views';
-import {
-  Header,
-  Page,
-  Pane,
-  Panes,
-  Refreshing,
-  Subtitle,
-  Title,
-  ViewSwitchSlot,
-} from './layout';
+import { Header, Page, Pane, Panes, Refreshing, Subtitle, Title, ViewSwitchSlot } from './layout';
 import { PlaceholderScreen } from './placeholder-screen';
 
 type View = 'tree' | 'table';

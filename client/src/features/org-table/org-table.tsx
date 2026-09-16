@@ -47,10 +47,10 @@ export const OrgTable = memo(function OrgTable({
 
   return (
     <CardScroll>
-      <Table onKeyDown={focus.onKeyDown}>
+      <Table>
         <OrgTableHead sort={sort} onToggleSort={onToggleSort} />
 
-        <tbody ref={focus.bodyRef} onClick={focus.onBodyClick}>
+        <tbody ref={focus.bodyRef} onClick={focus.onBodyClick} onKeyDown={focus.onKeyDown}>
           {rows.length === 0 && (
             <tr>
               <EmptyCell colSpan={COLUMNS.length}>Ничего не найдено</EmptyCell>

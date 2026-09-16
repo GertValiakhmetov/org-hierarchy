@@ -1,10 +1,10 @@
+import type { PatchField } from '@shared/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef } from 'react';
 import { OrgAggregates } from '@/entities/org/aggregate';
 import { ancestorIds, buildTree } from '@/entities/org/build-tree';
 import type { OrgTree } from '@/entities/org/types';
-import { useOrgLive, type LiveState } from '@/features/live';
-import type { PatchField } from '@shared/types';
+import { type LiveState, useOrgLive } from '@/features/live';
 import { orgTreeQuery, retryOrgTreeOnce } from '@/shared/api/org-tree';
 
 /**

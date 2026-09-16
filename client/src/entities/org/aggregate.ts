@@ -47,7 +47,9 @@ function publish(total: Accumulator): OrgAggregate {
     // A weighted mean is undefined when every weight is zero, so a subtree with
     // no staff falls back to the plain mean of its nodes' own scores.
     performance:
-      total.headcount > 0 ? total.weighted / total.headcount : total.performanceSum / total.nodeCount,
+      total.headcount > 0
+        ? total.weighted / total.headcount
+        : total.performanceSum / total.nodeCount,
   };
 }
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import type { OrgNodeDto } from '@shared/types';
+import { describe, expect, it } from 'vitest';
 import { ancestorIds, buildTree } from './build-tree';
 
 function node(id: string, parentId: string | null): OrgNodeDto {
@@ -52,7 +52,13 @@ describe('buildTree', () => {
   it('sibling order is inherited from the server response', () => {
     const reversedSiblings = [FLAT[0]!, FLAT[4]!, FLAT[1]!, FLAT[2]!, FLAT[3]!];
 
-    expect(buildTree(reversedSiblings).order).toEqual(['div', 'dep-2', 'dep-1', 'team-1', 'team-2']);
+    expect(buildTree(reversedSiblings).order).toEqual([
+      'div',
+      'dep-2',
+      'dep-1',
+      'team-1',
+      'team-2',
+    ]);
   });
 
   it('supports several roots', () => {

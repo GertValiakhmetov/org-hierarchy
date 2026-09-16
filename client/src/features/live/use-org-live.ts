@@ -1,9 +1,9 @@
+import { type LiveMessage, type OrgNodeDto, PATCH_FIELDS, type PatchField } from '@shared/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PATCH_FIELDS, type OrgNodeDto, type PatchField } from '@shared/types';
 import { orgTreeKeys } from '@/shared/api/org-tree';
 import { applyPatch, parseLiveMessage } from '@/shared/api/org-tree.schema';
-import { createReconnectingSocket, type ConnectionStatus } from '@/shared/transport/socket';
+import { type ConnectionStatus, createReconnectingSocket } from '@/shared/transport/socket';
 
 function liveUrl(): string {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -39,7 +39,7 @@ export function useOrgLive({ onNodePatched }: UseOrgLiveOptions): LiveState {
 
   const handleMessage = useCallback(
     (data: unknown) => {
-      let message;
+      let message: LiveMessage;
       try {
         message = parseLiveMessage(data);
       } catch (error) {

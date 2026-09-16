@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { OrgNodeDto } from '../../shared/types.ts';
-import { buildSystemPrompt, FilterSchema, toOrgFilter, type ParsedFilter } from './search-filter.ts';
+import {
+  buildSystemPrompt,
+  FilterSchema,
+  type ParsedFilter,
+  toOrgFilter,
+} from './search-filter.ts';
 
 /** The shape the model is forced to return: every key present, unused ones null. */
 function parsed(overrides: Partial<ParsedFilter> = {}): ParsedFilter {

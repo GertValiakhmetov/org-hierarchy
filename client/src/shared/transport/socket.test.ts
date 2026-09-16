@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createReconnectingSocket, type ConnectionStatus, type SocketLike } from './socket';
+import { type ConnectionStatus, createReconnectingSocket, type SocketLike } from './socket';
 
 type Listener = (event?: { data: unknown }) => void;
 

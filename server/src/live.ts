@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { WebSocketServer, type WebSocket } from 'ws';
+import { type WebSocket, WebSocketServer } from 'ws';
 import type { LiveMessage, OrgNodeDto, OrgNodePatch } from '../../shared/types.ts';
 
 const TICK_MS = Number(process.env.LIVE_TICK_MS ?? 3_000);
@@ -19,7 +19,10 @@ function randomPatch(nodes: OrgNodeDto[], random: () => number): OrgNodePatch | 
   const roll = random();
 
   if (roll < 0.45) {
-    patch.performance = Math.max(0, Math.min(100, node.performance + Math.round((random() - 0.5) * 20)));
+    patch.performance = Math.max(
+      0,
+      Math.min(100, node.performance + Math.round((random() - 0.5) * 20)),
+    );
     node.performance = patch.performance;
   } else if (roll < 0.8) {
     patch.headcount = Math.max(0, node.headcount + (random() < 0.5 ? -1 : 1));

@@ -72,7 +72,10 @@ function checkGraph(nodes: OrgNodeDto[], issues: ValidationIssue[]): void {
 
   nodes.forEach((node, index) => {
     if (node.parentId !== null && !byId.has(node.parentId)) {
-      issues.push({ path: `[${index}].parentId`, message: `родитель «${node.parentId}» отсутствует в ответе` });
+      issues.push({
+        path: `[${index}].parentId`,
+        message: `родитель «${node.parentId}» отсутствует в ответе`,
+      });
     }
   });
 
@@ -92,7 +95,10 @@ function checkGraph(nodes: OrgNodeDto[], issues: ValidationIssue[]): void {
 
     while (current && !settled.has(current.id)) {
       if (path.has(current.id)) {
-        issues.push({ path: `[${index}].parentId`, message: `цикл в иерархии через «${current.id}»` });
+        issues.push({
+          path: `[${index}].parentId`,
+          message: `цикл в иерархии через «${current.id}»`,
+        });
         break;
       }
       path.add(current.id);

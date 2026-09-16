@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import type { OrgFilter } from '@shared/types';
+import { describe, expect, it } from 'vitest';
 import { describeFilter, removeField } from './describe-filter';
 
 const labels = (filter: OrgFilter) => describeFilter(filter).map((chip) => chip.label);
