@@ -164,6 +164,11 @@ export const OrgTreeNode = memo(function OrgTreeNode({
   const flashing = useFlash(touched ? highlight?.at : undefined, FLASH_DURATION_MS);
   const flashes = (field: PatchField): boolean => flashing && highlight?.fields.has(field) === true;
 
+  const handleRowClick = (): void => {
+    onSelect(node.id);
+    if (hasChildren) onToggle(node.id);
+  };
+
   const headcountTitle = hasChildren
     ? `Собственных ${formatCount(node.headcount)}, в подразделениях ${formatCount(headcount - node.headcount)}`
     : 'Численность команды';
@@ -174,13 +179,12 @@ export const OrgTreeNode = memo(function OrgTreeNode({
       aria-expanded={hasChildren ? isExpanded : undefined}
       aria-selected={isSelected}
     >
-      <Row $depth={node.depth} $selected={isSelected} onClick={() => onSelect(node.id)}>
+      <Row $depth={node.depth} $selected={isSelected} onClick={handleRowClick}>
         {hasChildren ? (
           <Toggle
             type="button"
             $expanded={isExpanded}
             onClick={(event) => {
-              // The row itself selects; the chevron must not do both.
               event.stopPropagation();
               onToggle(node.id);
             }}
@@ -197,7 +201,7 @@ export const OrgTreeNode = memo(function OrgTreeNode({
         </Name>
 
         <Meta>
-          <Headcount title={headcountTitle} $flash={flashes('headcount') || flashes('budget')}>
+          <Headcount title={headcountTitle} $flash={flashes('headcount')}>
             {formatQuantity(headcount, PERSON_FORMS)}
           </Headcount>
           <PerformanceSlot $flash={flashes('performance')}>

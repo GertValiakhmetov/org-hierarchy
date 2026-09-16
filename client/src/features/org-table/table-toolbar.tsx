@@ -1,7 +1,6 @@
 import type { SearchFallbackReason, SearchSource } from '@shared/types';
 import styled from 'styled-components';
-import { ORG_UNIT_FORMS } from '@/entities/org/labels';
-import { formatCount, formatQuantity } from '@/shared/lib/format';
+import { formatCount } from '@/shared/lib/format';
 
 const Bar = styled.div`
   display: flex;
@@ -78,8 +77,8 @@ export function TableToolbar({
       <Field
         type="search"
         value={query}
-        placeholder="Поиск: название или запрос словами"
-        aria-label="Фильтр по названию подразделения"
+        placeholder="Название, или запрос словами + Enter"
+        aria-label="Поиск: название подразделения или запрос словами, Enter разбирает запрос"
         onChange={(event) => onQueryChange(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
@@ -89,11 +88,11 @@ export function TableToolbar({
         }}
       />
       {note && <Note>{note}</Note>}
-      <Count>
-        {isFiltered
-          ? `${formatCount(shownCount)} из ${formatCount(totalCount)}`
-          : formatQuantity(totalCount, ORG_UNIT_FORMS)}
-      </Count>
+      {isFiltered && (
+        <Count>
+          {formatCount(shownCount)} из {formatCount(totalCount)}
+        </Count>
+      )}
     </Bar>
   );
 }
