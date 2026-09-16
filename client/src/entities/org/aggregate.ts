@@ -1,4 +1,4 @@
-import type { OrgTree } from './types';
+import type { OrgNode, OrgTree } from './types';
 
 export interface OrgAggregate {
   headcount: number;
@@ -7,68 +7,115 @@ export interface OrgAggregate {
   performance: number;
 }
 
-export type OrgAggregates = ReadonlyMap<string, OrgAggregate>;
-
 interface Accumulator {
   headcount: number;
   budget: number;
-  /** Σ(performance × headcount); kept to fold children into a parent. */
+  /** Σ(performance × headcount), kept so a parent can fold its children. */
   weighted: number;
-  /** Σ(performance) and the node count behind it, used when all weights are 0. */
+  /** Used only when the whole subtree has zero headcount. */
   performanceSum: number;
   nodeCount: number;
 }
 
-/**
- * Rolls every node's own metrics up through its subtree in one O(n) pass.
- *
- * `tree.order` is depth-first, so walking it backwards guarantees that every
- * child is finished before its parent is reached — no recursion, no repeated
- * traversal, and the whole tree is aggregated exactly once.
- */
-export function aggregateTree(tree: OrgTree): OrgAggregates {
-  // Bookkeeping stays in `accumulators`; `result` carries only the public shape,
-  // so intermediate sums cannot leak to consumers at runtime.
-  const accumulators = new Map<string, Accumulator>();
-  const result = new Map<string, OrgAggregate>();
+function accumulate(node: OrgNode, totals: Map<string, Accumulator>): Accumulator {
+  const total: Accumulator = {
+    headcount: node.headcount,
+    budget: node.budget,
+    weighted: node.performance * node.headcount,
+    performanceSum: node.performance,
+    nodeCount: 1,
+  };
 
-  for (let index = tree.order.length - 1; index >= 0; index -= 1) {
-    const id = tree.order[index];
-    const node = id === undefined ? undefined : tree.byId.get(id);
-    if (!node) continue;
+  for (const child of node.children) {
+    const childTotal = totals.get(child.id);
+    if (!childTotal) continue;
 
-    const total: Accumulator = {
-      headcount: node.headcount,
-      budget: node.budget,
-      weighted: node.performance * node.headcount,
-      performanceSum: node.performance,
-      nodeCount: 1,
-    };
-
-    for (const child of node.children) {
-      const childTotal = accumulators.get(child.id);
-      if (!childTotal) continue;
-
-      total.headcount += childTotal.headcount;
-      total.budget += childTotal.budget;
-      total.weighted += childTotal.weighted;
-      total.performanceSum += childTotal.performanceSum;
-      total.nodeCount += childTotal.nodeCount;
-    }
-
-    accumulators.set(node.id, total);
-
-    // A weighted mean is undefined when every weight is zero, so a subtree with
-    // no staff falls back to the plain mean of its nodes' own scores.
-    result.set(node.id, {
-      headcount: total.headcount,
-      budget: total.budget,
-      performance:
-        total.headcount > 0
-          ? total.weighted / total.headcount
-          : total.performanceSum / total.nodeCount,
-    });
+    total.headcount += childTotal.headcount;
+    total.budget += childTotal.budget;
+    total.weighted += childTotal.weighted;
+    total.performanceSum += childTotal.performanceSum;
+    total.nodeCount += childTotal.nodeCount;
   }
 
-  return result;
+  return total;
+}
+
+function publish(total: Accumulator): OrgAggregate {
+  return {
+    headcount: total.headcount,
+    budget: total.budget,
+    // A weighted mean is undefined when every weight is zero, so a subtree with
+    // no staff falls back to the plain mean of its nodes' own scores.
+    performance:
+      total.headcount > 0 ? total.weighted / total.headcount : total.performanceSum / total.nodeCount,
+  };
+}
+
+/**
+ * Holds the published values alongside the running sums a parent needs, so a
+ * single branch can be recomputed later without revisiting the whole tree.
+ */
+export class OrgAggregates {
+  private constructor(
+    private readonly totals: Map<string, Accumulator>,
+    private readonly values: Map<string, OrgAggregate>,
+  ) {}
+
+  static empty(): OrgAggregates {
+    return new OrgAggregates(new Map(), new Map());
+  }
+
+  get size(): number {
+    return this.values.size;
+  }
+
+  get(nodeId: string): OrgAggregate | undefined {
+    return this.values.get(nodeId);
+  }
+
+  /**
+   * Rolls every node up in one O(n) pass. `tree.order` is depth-first, so
+   * walking it backwards reaches every child before its parent.
+   */
+  static fromTree(tree: OrgTree): OrgAggregates {
+    const totals = new Map<string, Accumulator>();
+    const values = new Map<string, OrgAggregate>();
+
+    for (let index = tree.order.length - 1; index >= 0; index -= 1) {
+      const id = tree.order[index];
+      const node = id === undefined ? undefined : tree.byId.get(id);
+      if (!node) continue;
+
+      const total = accumulate(node, totals);
+      totals.set(node.id, total);
+      values.set(node.id, publish(total));
+    }
+
+    return new OrgAggregates(totals, values);
+  }
+
+  /**
+   * Recomputes the changed node and its ancestors only — O(depth) rather than
+   * O(n). Everything else is carried over from this snapshot, and a fresh
+   * instance is returned so consumers can compare by reference.
+   */
+  recomputeBranch(tree: OrgTree, changedNodeId: string): OrgAggregates {
+    const totals = new Map(this.totals);
+    const values = new Map(this.values);
+
+    let node = tree.byId.get(changedNodeId);
+
+    while (node) {
+      const total = accumulate(node, totals);
+      totals.set(node.id, total);
+      values.set(node.id, publish(total));
+      node = node.parentId === null ? undefined : tree.byId.get(node.parentId);
+    }
+
+    return new OrgAggregates(totals, values);
+  }
+}
+
+export function aggregateTree(tree: OrgTree): OrgAggregates {
+  return OrgAggregates.fromTree(tree);
 }

@@ -1,10 +1,14 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import type { PatchField } from '@shared/types';
 import type { OrgAggregates } from '@/entities/org/aggregate';
+import type { Highlight } from '@/features/org-structure';
 import type { OrgNode } from '@/entities/org/types';
 import { PERSON_FORMS } from '@/entities/org/labels';
 import { LEVEL_LABEL } from '@/entities/org/types';
 import { formatCount, formatQuantity } from '@/shared/lib/format';
+import { useFlash } from '@/shared/lib/use-flash';
+import { FLASH_DURATION_MS, flash } from '@/shared/ui/flash';
 import { PerformanceDot } from '@/shared/ui/performance-dot';
 
 const Row = styled.div<{ $depth: number; $selected: boolean }>`
@@ -72,14 +76,37 @@ const Meta = styled.span`
   color: ${({ theme }) => theme.color.textSecondary};
 `;
 
-const Headcount = styled.span`
+const Headcount = styled.span<{ $flash?: boolean }>`
   font-variant-numeric: tabular-nums;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  padding: 0 ${({ theme }) => theme.space(1)};
+  ${flash}
+`;
+
+const PerformanceSlot = styled.span<{ $flash?: boolean }>`
+  display: inline-flex;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  padding: 0 ${({ theme }) => theme.space(1)};
+  ${flash}
+`;
+
+/**
+ * Animating to a content height that is not known in advance: a grid row of
+ * `0fr → 1fr` is the one way to do it in CSS alone, without measuring in JS and
+ * without hard-coding a max-height that clips long branches.
+ */
+const Collapsible = styled.div<{ $open: boolean }>`
+  display: grid;
+  grid-template-rows: ${({ $open }) => ($open ? '1fr' : '0fr')};
+  transition: grid-template-rows 200ms ease;
 `;
 
 const Group = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
+  min-height: 0;
+  overflow: hidden;
 `;
 
 const Item = styled.li`
@@ -89,7 +116,13 @@ const Item = styled.li`
 function Chevron() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-      <path d="M3 1.5 6.5 5 3 8.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M3 1.5 6.5 5 3 8.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -99,6 +132,7 @@ interface OrgTreeNodeProps {
   aggregates: OrgAggregates;
   expanded: ReadonlySet<string>;
   selectedId: string | null;
+  highlight: Highlight | null;
   onToggle: (nodeId: string) => void;
   onSelect: (nodeId: string) => void;
 }
@@ -108,6 +142,7 @@ export const OrgTreeNode = memo(function OrgTreeNode({
   aggregates,
   expanded,
   selectedId,
+  highlight,
   onToggle,
   onSelect,
 }: OrgTreeNodeProps) {
@@ -118,12 +153,27 @@ export const OrgTreeNode = memo(function OrgTreeNode({
   const total = aggregates.get(node.id);
   const headcount = total?.headcount ?? node.headcount;
   const performance = total?.performance ?? node.performance;
+  // Kept mounted after the first open so collapsing animates too; branches the
+  // user never opened stay out of the DOM.
+  const [isMounted, setIsMounted] = useState(isExpanded);
+  useEffect(() => {
+    if (isExpanded) setIsMounted(true);
+  }, [isExpanded]);
+
+  const touched = highlight?.nodeIds.has(node.id) === true;
+  const flashing = useFlash(touched ? highlight?.at : undefined, FLASH_DURATION_MS);
+  const flashes = (field: PatchField): boolean => flashing && highlight?.fields.has(field) === true;
+
   const headcountTitle = hasChildren
     ? `Собственных ${formatCount(node.headcount)}, в подразделениях ${formatCount(headcount - node.headcount)}`
     : 'Численность команды';
 
   return (
-    <Item role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined} aria-selected={isSelected}>
+    <Item
+      role="treeitem"
+      aria-expanded={hasChildren ? isExpanded : undefined}
+      aria-selected={isSelected}
+    >
       <Row $depth={node.depth} $selected={isSelected} onClick={() => onSelect(node.id)}>
         {hasChildren ? (
           <Toggle
@@ -147,25 +197,32 @@ export const OrgTreeNode = memo(function OrgTreeNode({
         </Name>
 
         <Meta>
-          <Headcount title={headcountTitle}>{formatQuantity(headcount, PERSON_FORMS)}</Headcount>
-          <PerformanceDot value={performance} />
+          <Headcount title={headcountTitle} $flash={flashes('headcount') || flashes('budget')}>
+            {formatQuantity(headcount, PERSON_FORMS)}
+          </Headcount>
+          <PerformanceSlot $flash={flashes('performance')}>
+            <PerformanceDot value={performance} />
+          </PerformanceSlot>
         </Meta>
       </Row>
 
-      {hasChildren && isExpanded && (
-        <Group role="group">
-          {node.children.map((child) => (
-            <OrgTreeNode
-              key={child.id}
-              node={child}
-              aggregates={aggregates}
-              expanded={expanded}
-              selectedId={selectedId}
-              onToggle={onToggle}
-              onSelect={onSelect}
-            />
-          ))}
-        </Group>
+      {hasChildren && isMounted && (
+        <Collapsible $open={isExpanded} aria-hidden={!isExpanded}>
+          <Group role="group">
+            {node.children.map((child) => (
+              <OrgTreeNode
+                key={child.id}
+                node={child}
+                aggregates={aggregates}
+                expanded={expanded}
+                selectedId={selectedId}
+                highlight={highlight}
+                onToggle={onToggle}
+                onSelect={onSelect}
+              />
+            ))}
+          </Group>
+        </Collapsible>
       )}
     </Item>
   );

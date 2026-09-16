@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import styled from 'styled-components';
 import type { DebugMode } from '@shared/types';
-import { debugModeQuery, setDebugMode } from '@/shared/api/debug';
+import { debugModeQuery, disconnectLive, setDebugMode } from '@/shared/api/debug';
 import { orgTreeKeys } from '@/shared/api/org-tree';
 
 export const isDebugPanelEnabled = import.meta.env.VITE_DEBUG_PANEL !== 'false';
@@ -91,6 +91,12 @@ const Bullet = styled.span<{ $selected: boolean }>`
   background: ${({ theme, $selected }) => ($selected ? theme.color.accent : theme.color.borderStrong)};
 `;
 
+const Divider = styled.div`
+  height: 1px;
+  margin: ${({ theme }) => theme.space(1)} 0;
+  background: ${({ theme }) => theme.color.border};
+`;
+
 const Note = styled.p`
   margin: 0;
   padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(2)};
@@ -117,6 +123,10 @@ export function DebugPanel() {
       // Same cache key, so the failure lands on a query that already holds data.
       await queryClient.invalidateQueries({ queryKey: orgTreeKeys.all });
     },
+  });
+
+  const disconnect = useMutation({
+    mutationFn: () => disconnectLive(AbortSignal.timeout(10_000)),
   });
 
   const current = modeQuery.data ?? 'normal';
@@ -146,6 +156,18 @@ export function DebugPanel() {
                 {MODE_LABELS[mode]}
               </ModeButton>
             ))}
+          </Body>
+          <Divider />
+          <Body>
+            <ModeButton
+              type="button"
+              $selected={false}
+              disabled={disconnect.isPending}
+              onClick={() => disconnect.mutate()}
+            >
+              <Bullet $selected={false} />
+              Разорвать соединение
+            </ModeButton>
           </Body>
           <Note>Режим меняется на сервере. Страница не перезагружается.</Note>
         </>

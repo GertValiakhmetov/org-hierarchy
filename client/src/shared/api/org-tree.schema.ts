@@ -1,4 +1,4 @@
-import type { OrgNodeDto } from '@shared/types';
+import type { LiveMessage, OrgNodeDto, OrgNodePatch } from '@shared/types';
 import { ApiError, type ValidationIssue } from '@/shared/transport/errors';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -135,4 +135,92 @@ export function parseOrgTreeResponse(payload: unknown): OrgNodeDto[] {
   }
 
   return payload as OrgNodeDto[];
+}
+
+function checkOptionalNumber(
+  value: unknown,
+  path: string,
+  issues: ValidationIssue[],
+  options: { min: number; max?: number; integer?: boolean },
+): void {
+  if (value === undefined) return;
+  checkNumber(value, path, issues, options);
+}
+
+/**
+ * Live frames go through the same gate as the REST payload: a malformed patch
+ * must not reach the cache, where it would corrupt data the user is reading.
+ */
+export function parseLiveMessage(raw: unknown): LiveMessage {
+  const issues: ValidationIssue[] = [];
+
+  if (typeof raw !== 'string') {
+    throw new ApiError('malformed', 'Live frame is not text', {
+      issues: [{ path: '$', message: 'ожидалась строка' }],
+    });
+  }
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw) as unknown;
+  } catch (error) {
+    throw new ApiError('malformed', 'Live frame is not valid JSON', { cause: error });
+  }
+
+  if (!isRecord(payload)) {
+    throw new ApiError('schema', 'Live message does not match the schema', {
+      issues: [{ path: '$', message: 'ожидался объект' }],
+    });
+  }
+
+  checkNumber(payload.version, 'version', issues, { min: 0, integer: true });
+
+  if (payload.type === 'hello') {
+    if (issues.length > 0) {
+      throw new ApiError('schema', 'Live message does not match the schema', { issues });
+    }
+    return { type: 'hello', version: payload.version as number };
+  }
+
+  if (payload.type !== 'node-updated') {
+    throw new ApiError('schema', 'Live message does not match the schema', {
+      issues: [{ path: 'type', message: `неизвестный тип «${String(payload.type)}»` }],
+    });
+  }
+
+  const patch = payload.patch;
+
+  if (!isRecord(patch)) {
+    issues.push({ path: 'patch', message: 'ожидался объект патча' });
+    throw new ApiError('schema', 'Live message does not match the schema', { issues });
+  }
+
+  checkNonEmptyString(patch.id, 'patch.id', issues);
+  checkNonEmptyString(patch.updatedAt, 'patch.updatedAt', issues);
+  checkOptionalNumber(patch.headcount, 'patch.headcount', issues, { min: 0, integer: true });
+  checkOptionalNumber(patch.budget, 'patch.budget', issues, { min: 0 });
+  checkOptionalNumber(patch.performance, 'patch.performance', issues, { min: 0, max: 100 });
+
+  if (issues.length > 0) {
+    throw new ApiError('schema', 'Live message does not match the schema', { issues });
+  }
+
+  return {
+    type: 'node-updated',
+    version: payload.version as number,
+    patch: patch as unknown as OrgNodePatch,
+  };
+}
+
+/** Returns the same array when the patch targets a node that is not present. */
+export function applyPatch(nodes: readonly OrgNodeDto[], patch: OrgNodePatch): OrgNodeDto[] {
+  let changed = false;
+
+  const next = nodes.map((node) => {
+    if (node.id !== patch.id) return node;
+    changed = true;
+    return { ...node, ...patch };
+  });
+
+  return changed ? next : (nodes as OrgNodeDto[]);
 }

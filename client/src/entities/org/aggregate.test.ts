@@ -107,3 +107,78 @@ describe('aggregateTree', () => {
     expect(aggregatesOf([]).size).toBe(0);
   });
 });
+
+describe('recomputeBranch', () => {
+  const FLAT: OrgNodeDto[] = [
+    node('div', null, { headcount: 2, budget: 100, performance: 60 }),
+    node('dep', 'div', { headcount: 3, budget: 200, performance: 70 }),
+    node('team-a', 'dep', { headcount: 5, budget: 300, performance: 80 }),
+    node('team-b', 'dep', { headcount: 10, budget: 400, performance: 50 }),
+    node('other', 'div', { headcount: 4, budget: 500, performance: 90 }),
+  ];
+
+  /** Applies a patch the way the query cache does, then rebuilds the tree. */
+  function patched(changes: Partial<OrgNodeDto> & Pick<OrgNodeDto, 'id'>) {
+    return buildTree(FLAT.map((n) => (n.id === changes.id ? { ...n, ...changes } : n)));
+  }
+
+  it('matches a full recomputation', () => {
+    const before = aggregateTree(buildTree(FLAT));
+    const tree = patched({ id: 'team-a', headcount: 25 });
+
+    const incremental = before.recomputeBranch(tree, 'team-a');
+    const full = aggregateTree(tree);
+
+    for (const id of tree.order) {
+      expect(incremental.get(id), id).toEqual(full.get(id));
+    }
+  });
+
+  it('updates the changed node and every ancestor', () => {
+    const tree = patched({ id: 'team-a', headcount: 25 });
+    const next = aggregateTree(buildTree(FLAT)).recomputeBranch(tree, 'team-a');
+
+    expect(next.get('team-a')?.headcount).toBe(25);
+    expect(next.get('dep')?.headcount).toBe(38);
+    expect(next.get('div')?.headcount).toBe(44);
+  });
+
+  it('leaves untouched branches byte-identical', () => {
+    const before = aggregateTree(buildTree(FLAT));
+    const tree = patched({ id: 'team-a', performance: 10 });
+    const after = before.recomputeBranch(tree, 'team-a');
+
+    expect(after.get('other')).toBe(before.get('other'));
+    expect(after.get('team-b')).toBe(before.get('team-b'));
+  });
+
+  it('returns a new instance so consumers can compare by reference', () => {
+    const before = aggregateTree(buildTree(FLAT));
+    const after = before.recomputeBranch(patched({ id: 'team-a', budget: 1 }), 'team-a');
+
+    expect(after).not.toBe(before);
+    expect(before.get('div')?.budget).toBe(1_500);
+  });
+
+  it('propagates a weighted performance change up the chain', () => {
+    const tree = patched({ id: 'team-b', performance: 100 });
+    const next = aggregateTree(buildTree(FLAT)).recomputeBranch(tree, 'team-b');
+
+    // dep: 70×3 + 80×5 + 100×10 = 1610 over 18 people.
+    expect(next.get('dep')?.performance).toBeCloseTo(1_610 / 18, 10);
+  });
+
+  it('handles a patch on a root', () => {
+    const tree = patched({ id: 'div', budget: 999 });
+    const next = aggregateTree(buildTree(FLAT)).recomputeBranch(tree, 'div');
+
+    expect(next.get('div')?.budget).toBe(2_399);
+  });
+
+  it('ignores a patch for an unknown node', () => {
+    const before = aggregateTree(buildTree(FLAT));
+    const after = before.recomputeBranch(buildTree(FLAT), 'ghost');
+
+    expect(after.get('div')).toEqual(before.get('div'));
+  });
+});

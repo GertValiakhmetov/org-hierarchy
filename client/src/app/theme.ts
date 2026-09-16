@@ -10,6 +10,7 @@ export const theme = {
     textMuted: '#8b94a3',
     accent: '#2f6df6',
     accentSoft: '#e8efff',
+    highlight: '#bed6ff',
     focus: '#2f6df6',
     danger: '#d64545',
     dangerSoft: '#fdecec',

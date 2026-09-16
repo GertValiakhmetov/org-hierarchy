@@ -26,3 +26,7 @@ export async function setDebugMode(mode: DebugMode, signal: AbortSignal): Promis
   const payload = await fetchJson('/api/debug/mode', signal, { method: 'POST', body: { mode } });
   return parseModeResponse(payload);
 }
+
+export async function disconnectLive(signal: AbortSignal): Promise<void> {
+  await fetchJson('/api/debug/disconnect', signal, { method: 'POST', body: {} });
+}

@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { DEBUG_MODES, type DebugMode } from '../../shared/types.ts';
 import { generateOrgTree } from './data/generate.ts';
+import { attachLiveChannel } from './live.ts';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -68,9 +69,24 @@ app.post('/api/debug/mode', (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', nodes: nodes.length, mode: debugMode });
+  res.json({
+    status: 'ok',
+    nodes: nodes.length,
+    mode: debugMode,
+    connections: live.connectionCount(),
+    version: live.version(),
+  });
 });
 
-app.listen(PORT, () => {
+app.post('/api/debug/disconnect', (_req, res) => {
+  const dropped = live.connectionCount();
+  live.disconnectAll();
+  console.log(`[server] разорвано соединений: ${dropped}`);
+  res.json({ dropped });
+});
+
+const server = app.listen(PORT, () => {
   console.log(`[server] http://localhost:${PORT} — ${nodes.length} узлов, задержка ${LATENCY_MS} мс`);
 });
+
+const live = attachLiveChannel(server, nodes);

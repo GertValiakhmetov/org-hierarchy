@@ -6,6 +6,7 @@ import { OrgTable, TableToolbar, useTableRows } from '@/features/org-table';
 import { OrgTree, useTreeNavigation } from '@/features/org-tree';
 import { formatQuantity } from '@/shared/lib/format';
 import { CardScroll, CardToolbar, CardToolbarButton } from '@/shared/ui/card';
+import { ConnectionDot } from '@/shared/ui/connection-dot';
 import { SegmentedControl, type SegmentedOption } from '@/shared/ui/segmented-control';
 import { StaleDataNotice } from '@/shared/ui/state-views';
 import {
@@ -48,6 +49,7 @@ export function App() {
           {unitCount} · {staffCount}
         </Subtitle>
         {org.isBackgroundRefetch && <Refreshing>обновление…</Refreshing>}
+        <ConnectionDot status={org.live.status} />
 
         <ViewSwitchSlot>
           <SegmentedControl
@@ -79,6 +81,7 @@ export function App() {
               aggregates={org.aggregates}
               expanded={navigation.expanded}
               selectedId={navigation.selectedId}
+              highlight={org.highlight}
               onToggle={navigation.toggle}
               onSelect={navigation.select}
             />
@@ -96,6 +99,7 @@ export function App() {
             rows={table.rows}
             sort={table.sort}
             selectedId={navigation.selectedId}
+            highlight={org.highlight}
             onToggleSort={table.toggleSort}
             onSelect={navigation.select}
           />

@@ -18,7 +18,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: { '/api': { target: SERVER_URL, changeOrigin: true } },
+    // ws: the live channel shares the /api prefix and needs upgrade forwarding.
+    proxy: { '/api': { target: SERVER_URL, changeOrigin: true, ws: true } },
     fs: { allow: ['..'] },
   },
 });
