@@ -1,4 +1,16 @@
 services:
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        VITE_DEBUG_PANEL: ${VITE_DEBUG_PANEL:-true}
+    ports:
+      - '8080:80'
+    depends_on:
+      - server
+    restart: unless-stopped
+
   server:
     build:
       context: .
@@ -10,16 +22,4 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     expose:
       - '4000'
-    restart: unless-stopped
-
-  client:
-    build:
-      context: .
-      dockerfile: client/Dockerfile
-      args:
-        VITE_DEBUG_PANEL: ${VITE_DEBUG_PANEL:-true}
-    ports:
-      - '${CLIENT_PORT:-8080}:80'
-    depends_on:
-      - server
     restart: unless-stopped
