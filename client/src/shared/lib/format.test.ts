@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatPerformance, formatRubles, plural } from './format';
+import { formatCount, formatPerformance, formatQuantity, formatRubles, plural } from './format';
 
 describe('formatRubles', () => {
   it('groups digits and appends the currency unit', () => {
@@ -45,5 +45,18 @@ describe('plural', () => {
     [0, 'подразделений'],
   ])('%i → %s', (count, expected) => {
     expect(plural(count, forms)).toBe(expected);
+  });
+});
+
+describe('formatQuantity', () => {
+  const forms: [string, string, string] = ['человек', 'человека', 'человек'];
+
+  it('joins a grouped number with the matching noun form', () => {
+    expect(formatQuantity(1_234, forms)).toBe('1 234 человека');
+  });
+
+  it('agrees with the count', () => {
+    expect(formatQuantity(1, forms)).toBe('1 человек');
+    expect(formatQuantity(5, forms)).toBe('5 человек');
   });
 });

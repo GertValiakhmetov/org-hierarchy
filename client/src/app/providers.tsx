@@ -5,8 +5,6 @@ import { retryDelay, shouldRetry } from '@/shared/transport/retry-policy';
 import { GlobalStyle } from './global-style';
 import { theme } from './theme';
 
-// Created once per module: rebuilding it inside a component would drop the
-// whole cache on every re-render of the root.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

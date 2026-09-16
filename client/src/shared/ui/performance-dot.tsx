@@ -20,7 +20,6 @@ const Dot = styled.span<{ $band: ReturnType<typeof performanceBand> }>`
 
 interface PerformanceDotProps {
   value: number;
-  /** Renders the colour mark alone, without the numeric value. */
   withoutValue?: boolean;
   className?: string;
 }

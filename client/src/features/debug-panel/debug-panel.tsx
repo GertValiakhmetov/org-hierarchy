@@ -5,7 +5,6 @@ import type { DebugMode } from '@shared/types';
 import { debugModeQuery, setDebugMode } from '@/shared/api/debug';
 import { orgTreeKeys } from '@/shared/api/org-tree';
 
-/** On unless a build explicitly passes VITE_DEBUG_PANEL=false. */
 export const isDebugPanelEnabled = import.meta.env.VITE_DEBUG_PANEL !== 'false';
 
 const MODE_LABELS: Record<DebugMode, string> = {

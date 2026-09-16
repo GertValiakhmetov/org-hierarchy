@@ -8,9 +8,7 @@
 export type ApiErrorKind = 'network' | 'http' | 'malformed' | 'schema';
 
 export interface ValidationIssue {
-  /** Path to the offending field: `[3].id`, or `$` for the payload root. */
   path: string;
-  /** Rendered in the error state, so unlike `ApiError.message` it is user-facing. */
   message: string;
 }
 

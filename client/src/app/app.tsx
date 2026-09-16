@@ -1,155 +1,106 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
-import styled from 'styled-components';
-import { buildTree } from '@/entities/org/build-tree';
+import { useState } from 'react';
+import { EMPLOYEE_FORMS, ORG_UNIT_FORMS } from '@/entities/org/labels';
 import { DebugPanel, isDebugPanelEnabled } from '@/features/debug-panel/debug-panel';
-import { OrgTreeView } from '@/features/org-tree/org-tree-view';
-import { useExpanded } from '@/features/org-tree/use-expanded';
-import { orgTreeQuery, retryOrgTreeOnce } from '@/shared/api/org-tree';
-import { formatCount, plural } from '@/shared/lib/format';
-import { EmptyState, ErrorState, LoadingState, StaleDataNotice } from '@/shared/ui/state-views';
+import { useOrgStructure } from '@/features/org-structure';
+import { OrgTable, TableToolbar, useTableRows } from '@/features/org-table';
+import { OrgTree, useTreeNavigation } from '@/features/org-tree';
+import { formatQuantity } from '@/shared/lib/format';
+import { CardScroll, CardToolbar, CardToolbarButton } from '@/shared/ui/card';
+import { SegmentedControl, type SegmentedOption } from '@/shared/ui/segmented-control';
+import { StaleDataNotice } from '@/shared/ui/state-views';
+import {
+  Header,
+  Page,
+  Pane,
+  Panes,
+  Refreshing,
+  Subtitle,
+  Title,
+  ViewSwitchSlot,
+} from './layout';
+import { PlaceholderScreen } from './placeholder-screen';
 
-const Page = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.space(4)};
-  height: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: ${({ theme }) => theme.space(6)};
-`;
+type View = 'tree' | 'table';
 
-const Header = styled.header`
-  display: flex;
-  align-items: baseline;
-  gap: ${({ theme }) => theme.space(3)};
-  flex-wrap: wrap;
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  font-size: ${({ theme }) => theme.size.xl};
-  font-weight: 600;
-  letter-spacing: -0.01em;
-`;
-
-const Subtitle = styled.span`
-  color: ${({ theme }) => theme.color.textSecondary};
-`;
-
-const Refreshing = styled.span`
-  margin-left: auto;
-  font-size: ${({ theme }) => theme.size.sm};
-  color: ${({ theme }) => theme.color.textMuted};
-`;
-
-const Card = styled.section`
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  border: 1px solid ${({ theme }) => theme.color.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
-  background: ${({ theme }) => theme.color.surface};
-  box-shadow: ${({ theme }) => theme.shadow.card};
-  overflow: hidden;
-`;
-
-const Toolbar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.space(2)};
-  padding: ${({ theme }) => theme.space(2)} ${({ theme }) => theme.space(3)};
-  border-bottom: 1px solid ${({ theme }) => theme.color.border};
-  background: ${({ theme }) => theme.color.surfaceMuted};
-`;
-
-const ToolbarButton = styled.button`
-  padding: ${({ theme }) => theme.space(1)} ${({ theme }) => theme.space(2.5)};
-  border: 1px solid transparent;
-  border-radius: ${({ theme }) => theme.radius.sm};
-  background: transparent;
-  font-size: ${({ theme }) => theme.size.sm};
-  color: ${({ theme }) => theme.color.textSecondary};
-  cursor: pointer;
-
-  &:hover {
-    border-color: ${({ theme }) => theme.color.border};
-    background: ${({ theme }) => theme.color.surface};
-    color: ${({ theme }) => theme.color.textPrimary};
-  }
-`;
-
-const Scroll = styled.div`
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-`;
+const VIEW_OPTIONS: readonly SegmentedOption<View>[] = [
+  { value: 'tree', label: 'Дерево' },
+  { value: 'table', label: 'Таблица' },
+];
 
 export function App() {
-  const queryClient = useQueryClient();
-  const query = useQuery(orgTreeQuery());
+  const org = useOrgStructure();
+  const navigation = useTreeNavigation(org.tree);
+  const table = useTableRows(org.tree, org.aggregates);
+  const [view, setView] = useState<View>('tree');
 
-  const retry = useCallback(() => void retryOrgTreeOnce(queryClient), [queryClient]);
+  if (org.status !== 'ready') {
+    return <PlaceholderScreen structure={org} />;
+  }
 
-  const tree = useMemo(() => (query.data ? buildTree(query.data) : undefined), [query.data]);
-  const expansion = useExpanded(tree);
-
-  const hasData = tree !== undefined;
-  const isFatalError = query.isError && !hasData;
-  const isStale = query.isError && hasData;
-  const isBackgroundRefetch = query.isFetching && !query.isPending;
+  const unitCount = formatQuantity(org.tree.size, ORG_UNIT_FORMS);
+  const staffCount = formatQuantity(org.totalHeadcount, EMPLOYEE_FORMS);
 
   return (
     <Page>
       <Header>
         <Title>Орг-структура компании</Title>
-        {hasData && tree.size > 0 && (
-          <Subtitle>
-            {formatCount(tree.size)} {plural(tree.size, ['подразделение', 'подразделения', 'подразделений'])}
-          </Subtitle>
-        )}
-        {isBackgroundRefetch && <Refreshing>обновление…</Refreshing>}
+        <Subtitle>
+          {unitCount} · {staffCount}
+        </Subtitle>
+        {org.isBackgroundRefetch && <Refreshing>обновление…</Refreshing>}
+
+        <ViewSwitchSlot>
+          <SegmentedControl
+            options={VIEW_OPTIONS}
+            value={view}
+            onChange={setView}
+            label="Представление"
+          />
+        </ViewSwitchSlot>
       </Header>
 
-      <Card>
-        {hasData && tree.size > 0 && (
-          <Toolbar>
-            <ToolbarButton type="button" onClick={expansion.expandAll}>
+      {org.isStale && (
+        <StaleDataNotice error={org.error} onRetry={org.retry} isRetrying={org.isRetrying} />
+      )}
+
+      <Panes>
+        <Pane $hiddenBelowSplit={view !== 'tree'}>
+          <CardToolbar>
+            <CardToolbarButton type="button" onClick={navigation.expandAll}>
               Развернуть всё
-            </ToolbarButton>
-            <ToolbarButton type="button" onClick={expansion.collapseAll}>
+            </CardToolbarButton>
+            <CardToolbarButton type="button" onClick={navigation.collapseAll}>
               Свернуть всё
-            </ToolbarButton>
-          </Toolbar>
-        )}
-
-        {isStale && (
-          <StaleDataNotice
-            error={query.error}
-            onRetry={retry}
-            isRetrying={query.isFetching}
-          />
-        )}
-
-        <Scroll>
-          {query.isPending && <LoadingState />}
-
-          {isFatalError && (
-            <ErrorState
-              error={query.error}
-              onRetry={retry}
-              isRetrying={query.isFetching}
+            </CardToolbarButton>
+          </CardToolbar>
+          <CardScroll>
+            <OrgTree
+              tree={org.tree}
+              aggregates={org.aggregates}
+              expanded={navigation.expanded}
+              selectedId={navigation.selectedId}
+              onToggle={navigation.toggle}
+              onSelect={navigation.select}
             />
-          )}
+          </CardScroll>
+        </Pane>
 
-          {hasData && tree.size === 0 && <EmptyState />}
-
-          {hasData && tree.size > 0 && (
-            <OrgTreeView tree={tree} expanded={expansion.expanded} onToggle={expansion.toggle} />
-          )}
-        </Scroll>
-      </Card>
+        <Pane $hiddenBelowSplit={view !== 'table'}>
+          <TableToolbar
+            filter={table.filter}
+            onFilterChange={table.setFilter}
+            shownCount={table.rows.length}
+            totalCount={table.totalCount}
+          />
+          <OrgTable
+            rows={table.rows}
+            sort={table.sort}
+            selectedId={navigation.selectedId}
+            onToggleSort={table.toggleSort}
+            onSelect={navigation.select}
+          />
+        </Pane>
+      </Panes>
 
       {isDebugPanelEnabled && <DebugPanel />}
     </Page>

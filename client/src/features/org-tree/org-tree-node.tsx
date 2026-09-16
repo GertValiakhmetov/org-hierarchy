@@ -1,11 +1,13 @@
 import { memo } from 'react';
 import styled from 'styled-components';
+import type { OrgAggregates } from '@/entities/org/aggregate';
 import type { OrgNode } from '@/entities/org/types';
+import { PERSON_FORMS } from '@/entities/org/labels';
 import { LEVEL_LABEL } from '@/entities/org/types';
-import { formatCount, plural } from '@/shared/lib/format';
+import { formatCount, formatQuantity } from '@/shared/lib/format';
 import { PerformanceDot } from '@/shared/ui/performance-dot';
 
-const Row = styled.div<{ $depth: number }>`
+const Row = styled.div<{ $depth: number; $selected: boolean }>`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.space(2)};
@@ -13,10 +15,12 @@ const Row = styled.div<{ $depth: number }>`
   padding: ${({ theme }) => theme.space(1.5)} ${({ theme }) => theme.space(3)};
   padding-left: ${({ theme, $depth }) => theme.space(3 + $depth * 5)};
   border-radius: ${({ theme }) => theme.radius.sm};
-  cursor: default;
+  cursor: pointer;
+  background: ${({ theme, $selected }) => ($selected ? theme.color.accentSoft : 'transparent')};
 
   &:hover {
-    background: ${({ theme }) => theme.color.surfaceMuted};
+    background: ${({ theme, $selected }) =>
+      $selected ? theme.color.accentSoft : theme.color.surfaceMuted};
   }
 `;
 
@@ -45,7 +49,6 @@ const Toggle = styled.button<{ $expanded: boolean }>`
   }
 `;
 
-/** Keeps leaf labels aligned with their siblings' chevrons. */
 const TogglePlaceholder = styled.span`
   flex: none;
   width: 18px;
@@ -93,26 +96,44 @@ function Chevron() {
 
 interface OrgTreeNodeProps {
   node: OrgNode;
+  aggregates: OrgAggregates;
   expanded: ReadonlySet<string>;
+  selectedId: string | null;
   onToggle: (nodeId: string) => void;
+  onSelect: (nodeId: string) => void;
 }
 
-/**
- * memo pays off here because `expanded` and `onToggle` are stable across
- * renders, so only the subtree whose state actually changed re-renders.
- */
-export const OrgTreeNode = memo(function OrgTreeNode({ node, expanded, onToggle }: OrgTreeNodeProps) {
+export const OrgTreeNode = memo(function OrgTreeNode({
+  node,
+  aggregates,
+  expanded,
+  selectedId,
+  onToggle,
+  onSelect,
+}: OrgTreeNodeProps) {
   const hasChildren = node.children.length > 0;
   const isExpanded = hasChildren && expanded.has(node.id);
+  const isSelected = node.id === selectedId;
+
+  const total = aggregates.get(node.id);
+  const headcount = total?.headcount ?? node.headcount;
+  const performance = total?.performance ?? node.performance;
+  const headcountTitle = hasChildren
+    ? `Собственных ${formatCount(node.headcount)}, в подразделениях ${formatCount(headcount - node.headcount)}`
+    : 'Численность команды';
 
   return (
-    <Item role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined}>
-      <Row $depth={node.depth}>
+    <Item role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined} aria-selected={isSelected}>
+      <Row $depth={node.depth} $selected={isSelected} onClick={() => onSelect(node.id)}>
         {hasChildren ? (
           <Toggle
             type="button"
             $expanded={isExpanded}
-            onClick={() => onToggle(node.id)}
+            onClick={(event) => {
+              // The row itself selects; the chevron must not do both.
+              event.stopPropagation();
+              onToggle(node.id);
+            }}
             aria-label={`${isExpanded ? 'Свернуть' : 'Развернуть'} «${node.name}»`}
           >
             <Chevron />
@@ -126,17 +147,23 @@ export const OrgTreeNode = memo(function OrgTreeNode({ node, expanded, onToggle 
         </Name>
 
         <Meta>
-          <Headcount title="Собственная численность узла">
-            {formatCount(node.headcount)} {plural(node.headcount, ['человек', 'человека', 'человек'])}
-          </Headcount>
-          <PerformanceDot value={node.performance} />
+          <Headcount title={headcountTitle}>{formatQuantity(headcount, PERSON_FORMS)}</Headcount>
+          <PerformanceDot value={performance} />
         </Meta>
       </Row>
 
       {hasChildren && isExpanded && (
         <Group role="group">
           {node.children.map((child) => (
-            <OrgTreeNode key={child.id} node={child} expanded={expanded} onToggle={onToggle} />
+            <OrgTreeNode
+              key={child.id}
+              node={child}
+              aggregates={aggregates}
+              expanded={expanded}
+              selectedId={selectedId}
+              onToggle={onToggle}
+              onSelect={onSelect}
+            />
           ))}
         </Group>
       )}

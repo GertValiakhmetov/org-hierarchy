@@ -1,6 +1,5 @@
 import { ApiError } from './errors';
 
-/** Attempts made without user involvement: the first one plus this many retries. */
 const MAX_AUTOMATIC_RETRIES = 2;
 
 /**

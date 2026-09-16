@@ -1,4 +1,3 @@
-// Constructing an Intl formatter is expensive, so each one is built once.
 const integerFormatter = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
 const decimalFormatter = new Intl.NumberFormat('ru-RU', {
   minimumFractionDigits: 1,
@@ -28,9 +27,14 @@ const pluralRules = new Intl.PluralRules('ru-RU');
 
 const PLURAL_INDEX: Record<string, 0 | 1 | 2> = { one: 0, few: 1, many: 2, other: 2 };
 
-/** Russian noun form for a count: forms are given as [1, 2, 5]. */
-export function plural(count: number, forms: [string, string, string]): string {
+export type PluralForms = readonly [string, string, string];
+
+export function plural(count: number, forms: PluralForms): string {
   return forms[PLURAL_INDEX[pluralRules.select(count)] ?? 2];
+}
+
+export function formatQuantity(count: number, forms: PluralForms): string {
+  return `${formatCount(count)} ${plural(count, forms)}`;
 }
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', {

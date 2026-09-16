@@ -51,7 +51,6 @@ const SkeletonList = styled.div`
   padding: ${({ theme }) => theme.space(5)};
 `;
 
-/** Mirrors the tree's shape so the layout does not jump once data arrives. */
 const SKELETON_SHAPE: { indent: number; width: number }[] = [
   { indent: 0, width: 46 },
   { indent: 1, width: 62 },
@@ -110,7 +109,6 @@ const IssueList = styled.ul`
   overflow-x: auto;
 `;
 
-/** A full list of violations is unreadable; the rest collapse into a counter. */
 const MAX_VISIBLE_ISSUES = 5;
 
 function describe(error: unknown): { title: string; hint: string } {

@@ -19,7 +19,6 @@ export const debugModeQuery = () =>
   queryOptions({
     queryKey: ['debug-mode'] as const,
     queryFn: async ({ signal }) => parseModeResponse(await fetchJson('/api/debug/mode', signal)),
-    /** Only the panel changes the mode, and it writes the result back itself. */
     staleTime: Number.POSITIVE_INFINITY,
   });
 
