@@ -42,30 +42,30 @@ export async function parseQuery(
     );
 
     if (response.stop_reason === 'refusal') {
-      console.warn('[search] модель отклонила запрос:', response.stop_details?.category);
+      console.warn('[search] the model refused the request:', response.stop_details?.category);
       return null;
     }
 
     const parsed = response.parsed_output;
     if (!parsed) {
-      console.warn('[search] ответ не разобрался в схему');
+      console.warn('[search] the response did not parse into the schema');
       return null;
     }
 
     console.log(
-      `[search] «${query}» — ${response.usage.input_tokens} вх., ${response.usage.output_tokens} исх.`,
+      `[search] «${query}» — ${response.usage.input_tokens} in, ${response.usage.output_tokens} out`,
     );
 
     return toOrgFilter(parsed);
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
-      console.error('[search] ключ отклонён');
+      console.error('[search] the API key was rejected');
     } else if (error instanceof Anthropic.RateLimitError) {
-      console.error('[search] превышен лимит запросов');
+      console.error('[search] rate limit exceeded');
     } else if (error instanceof Anthropic.APIError) {
-      console.error(`[search] ошибка API ${error.status}: ${error.message}`);
+      console.error(`[search] API error ${error.status}: ${error.message}`);
     } else {
-      console.error('[search] не удалось обратиться к модели:', error);
+      console.error('[search] could not reach the model:', error);
     }
     return null;
   }

@@ -146,7 +146,7 @@ describe('selectRows: структурный фильтр', () => {
   });
 
   it('compares ranges against aggregates, which is what the table shows', () => {
-    // «Инженерия» имеет 108 в свёртке; собственное значение узла меньше.
+    // «Инженерия» rolls up to 108; the node's own value is far smaller.
     expect(names({ headcount: { min: 100 } })).toEqual(['Инженерия']);
   });
 

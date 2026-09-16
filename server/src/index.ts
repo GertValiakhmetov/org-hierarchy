@@ -35,7 +35,7 @@ app.get('/api/org-tree', async (_req, res) => {
 
   switch (debugMode) {
     case 'error':
-      res.status(500).json({ message: 'Режим отладки: сервер вернул ошибку' });
+      res.status(500).json({ message: 'Debug mode: the server returned an error' });
       return;
 
     case 'empty':
@@ -62,12 +62,12 @@ app.post('/api/debug/mode', (req, res) => {
   const mode = (req.body as { mode?: unknown } | undefined)?.mode;
 
   if (!DEBUG_MODES.includes(mode as DebugMode)) {
-    res.status(400).json({ message: `Неизвестный режим: ${String(mode)}` });
+    res.status(400).json({ message: `Unknown debug mode: ${String(mode)}` });
     return;
   }
 
   debugMode = mode as DebugMode;
-  console.log(`[server] режим отладки: ${debugMode}`);
+  console.log(`[server] debug mode: ${debugMode}`);
   res.json({ mode: debugMode });
 });
 
@@ -84,13 +84,13 @@ app.get('/api/health', (_req, res) => {
 app.post('/api/debug/disconnect', (_req, res) => {
   const dropped = live.connectionCount();
   live.disconnectAll();
-  console.log(`[server] разорвано соединений: ${dropped}`);
+  console.log(`[server] dropped ${dropped} live connection(s)`);
   res.json({ dropped });
 });
 
 const server = app.listen(PORT, () => {
   console.log(
-    `[server] http://localhost:${PORT} — ${nodes.length} узлов, задержка ${LATENCY_MS} мс`,
+    `[server] http://localhost:${PORT} — ${nodes.length} nodes, ${LATENCY_MS}ms latency`,
   );
 });
 

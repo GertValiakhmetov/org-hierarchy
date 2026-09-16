@@ -43,7 +43,7 @@ export function useOrgLive({ onNodePatched }: UseOrgLiveOptions): LiveState {
       try {
         message = parseLiveMessage(data);
       } catch (error) {
-        console.error('[live] отброшено некорректное сообщение', error);
+        console.error('[live] dropped a malformed message', error);
         return;
       }
 

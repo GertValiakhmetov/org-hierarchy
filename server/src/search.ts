@@ -29,7 +29,7 @@ export function createSearchHandler(nodes: readonly OrgNodeDto[]) {
     if (query === null) {
       res
         .status(400)
-        .json({ message: `query: непустая строка не длиннее ${MAX_SEARCH_QUERY_LENGTH}` });
+        .json({ message: `query must be a non-empty string of at most ${MAX_SEARCH_QUERY_LENGTH} characters` });
       return;
     }
 
